@@ -1,0 +1,5 @@
+{
+    "INPUT": "./input",
+    "OUTPUT": "./output",
+    "FFMPEG": "./ffmpeg/ffmpeg.exe"
+}
