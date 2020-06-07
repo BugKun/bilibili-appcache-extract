@@ -1,13 +1,13 @@
 {
   "name": "bilibili-appcache-extract",
   "version": "1.0.0",
-  "description": "",
+  "description": "Extract videos from offline cache directories of bilibili mobile client app, with names including the videos' title. ",
   "main": "app.js",
   "scripts": {
     "start": "node ./app.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "nopast",
+  "license": "MIT",
   "dependencies": {
     "fs-extra": "^9.0.1"
   }
