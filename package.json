@@ -9,6 +9,8 @@
   "author": "nopast",
   "license": "MIT",
   "dependencies": {
-    "fs-extra": "^9.0.1"
+    "async": "^3.2.2",
+    "fs-extra": "^9.0.1",
+    "simple-get": "^4.0.0"
   }
 }
