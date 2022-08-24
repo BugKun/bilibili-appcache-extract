@@ -4,7 +4,7 @@
   "description": "Extract videos from offline cache directories of bilibili mobile client app, with names including the videos' title. ",
   "main": "app.js",
   "scripts": {
-    "start": "node ./app.js"
+    "start": "node --trace-uncaught ./app.js"
   },
   "author": "nopast",
   "license": "MIT",
