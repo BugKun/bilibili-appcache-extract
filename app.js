@@ -77,22 +77,30 @@ videos.forEach(video => {
         const outputPath = path.resolve(CONFIG.OUTPUT, uploader, folderName)
         fs.ensureDirSync(outputPath)
         const inputPrefix = path.resolve(CONFIG.INPUT, video, clip, entry.type_tag)
-        const audioFilePath = path.resolve(inputPrefix, 'audio.m4s')
-        const videoFilePath = path.resolve(inputPrefix, 'video.m4s')
+        const indexJSONPath = path.resolve(inputPrefix, 'index.json')
+        const indexRaw = fs.readFileSync(indexJSONPath)
+        const indexData = JSON.parse(indexRaw)
         const safePartName = replaceUnsafeStr(entry.page_data.part)
-        const filepath = path.resolve(outputPath, `${safePartName}.mp4`)
-        const ffmpegParams = ['-y', '-i', videoFilePath, '-i', audioFilePath, '-vcodec', 'copy', '-acodec', 'copy', filepath]
-        const result = childProcess.spawnSync(CONFIG.FFMPEG, ffmpegParams)
-        if(result.status != 0) {
-            console.log('input params:', ffmpegParams)
-            throw result.stderr.toString()
+        if(indexData.from === 'vupload') {
+            const filepath = path.resolve(outputPath, `${safePartName}.${indexData.format}`)
+            fs.copyFileSync(path.resolve(inputPrefix, '0.blv'), filepath)
         } else {
-            fs.copyFileSync(entryJSONPath, path.join(outputPath, `${safePartName}-entry.json`))
-            fs.copyFileSync(path.join(clipPath, 'danmaku.xml'), path.join(outputPath, `${safePartName}-danmaku.xml`))
-            if(!imageTasks[outputPath]) {
-                imageTasks[outputPath] = {cover: entry.cover, outputPath}
+            const filepath = path.resolve(outputPath, `${safePartName}.mp4`)
+            const audioFilePath = path.resolve(inputPrefix, 'audio.m4s')
+            const videoFilePath = path.resolve(inputPrefix, 'video.m4s')
+            const ffmpegParams = ['-y', '-i', videoFilePath, '-i', audioFilePath, '-vcodec', 'copy', '-acodec', 'copy', filepath]
+            const result = childProcess.spawnSync(CONFIG.FFMPEG, ffmpegParams)
+            if(result.status != 0) {
+                console.log('input params:', ffmpegParams)
+                throw result.stderr.toString()
+            } else {
+                console.log(result.stderr.toString())
             }
-            console.log(result.stderr.toString())
+        }
+        fs.copyFileSync(entryJSONPath, path.join(outputPath, `${safePartName}-entry.json`))
+        fs.copyFileSync(path.join(clipPath, 'danmaku.xml'), path.join(outputPath, `${safePartName}-danmaku.xml`))
+        if(!imageTasks[outputPath]) {
+            imageTasks[outputPath] = {cover: entry.cover, outputPath}
         }
     })
 })
