@@ -63,45 +63,50 @@ const videos = fs.readdirSync(path.resolve(CONFIG.INPUT))
 let imageTasks = {}
 
 videos.forEach(video => {
-    const videoClips = fs.readdirSync(path.resolve(CONFIG.INPUT, video))
-    videoClips.forEach(clip => {
+    const videoList = fs.readdirSync(path.resolve(CONFIG.INPUT, video))
+    videoList.forEach(item => {
         let uploader = 'unkown'
-        const clipPath = path.resolve(CONFIG.INPUT, video, clip)
-        const entryJSONPath = path.resolve(clipPath, 'entry.json')
-        const entryRaw = fs.readFileSync(entryJSONPath)
-        const entry = JSON.parse(entryRaw)
-        if(entry.owner_id) {
-            uploader = String(entry.owner_id)
-        }
-        const folderName = `av${entry.avid}-${safeFolderName(entry.title)}`
-        const outputPath = path.resolve(CONFIG.OUTPUT, uploader, folderName)
-        fs.ensureDirSync(outputPath)
-        const inputPrefix = path.resolve(CONFIG.INPUT, video, clip, entry.type_tag)
-        const indexJSONPath = path.resolve(inputPrefix, 'index.json')
-        const indexRaw = fs.readFileSync(indexJSONPath)
-        const indexData = JSON.parse(indexRaw)
-        const safePartName = replaceUnsafeStr(entry.page_data.part)
-        if(indexData.from === 'vupload') {
-            const filepath = path.resolve(outputPath, `${safePartName}.${indexData.format}`)
-            fs.copyFileSync(path.resolve(inputPrefix, '0.blv'), filepath)
-        } else {
-            const filepath = path.resolve(outputPath, `${safePartName}.mp4`)
-            const audioFilePath = path.resolve(inputPrefix, 'audio.m4s')
-            const videoFilePath = path.resolve(inputPrefix, 'video.m4s')
-            const ffmpegParams = ['-y', '-i', videoFilePath, '-i', audioFilePath, '-vcodec', 'copy', '-acodec', 'copy', filepath]
-            const result = childProcess.spawnSync(CONFIG.FFMPEG, ffmpegParams)
-            if(result.status != 0) {
-                console.log('input params:', ffmpegParams)
-                throw result.stderr.toString()
-            } else {
-                console.log(result.stderr.toString())
+        const clipPath = path.resolve(CONFIG.INPUT, video, item)
+        const videoClips = fs.readdirSync(clipPath)
+        videoClips.forEach(clip => {
+            const itemPath = path.resolve(clipPath, clip)
+            console.log('Dir: ',itemPath)
+            const entryJSONPath = path.resolve(itemPath, 'entry.json')
+            const entryRaw = fs.readFileSync(entryJSONPath)
+            const entry = JSON.parse(entryRaw)
+            if(entry.owner_id) {
+                uploader = String(entry.owner_id)
             }
-        }
-        fs.copyFileSync(entryJSONPath, path.join(outputPath, `${safePartName}-entry.json`))
-        fs.copyFileSync(path.join(clipPath, 'danmaku.xml'), path.join(outputPath, `${safePartName}-danmaku.xml`))
-        if(!imageTasks[outputPath]) {
-            imageTasks[outputPath] = {cover: entry.cover, outputPath}
-        }
+            const folderName = `av${entry.avid}-${safeFolderName(entry.title)}`
+            const outputPath = path.resolve(CONFIG.OUTPUT, uploader, folderName)
+            fs.ensureDirSync(outputPath)
+            const inputPrefix = path.resolve(itemPath, entry.type_tag)
+            const indexJSONPath = path.resolve(inputPrefix, 'index.json')
+            const indexRaw = fs.readFileSync(indexJSONPath)
+            const indexData = JSON.parse(indexRaw)
+            const safePartName = replaceUnsafeStr(entry.page_data.part)
+            if(indexData.from === 'vupload') {
+                const filepath = path.resolve(outputPath, `${safePartName}.${indexData.format}`)
+                fs.copyFileSync(path.resolve(inputPrefix, '0.blv'), filepath)
+            } else {
+                const filepath = path.resolve(outputPath, `${safePartName}.mp4`)
+                const audioFilePath = path.resolve(inputPrefix, 'audio.m4s')
+                const videoFilePath = path.resolve(inputPrefix, 'video.m4s')
+                const ffmpegParams = ['-y', '-i', videoFilePath, '-i', audioFilePath, '-vcodec', 'copy', '-acodec', 'copy', filepath]
+                const result = childProcess.spawnSync(CONFIG.FFMPEG, ffmpegParams)
+                if(result.status != 0) {
+                    console.log('input params:', ffmpegParams)
+                    throw result.stderr.toString()
+                } else {
+                    console.log(result.stderr.toString())
+                }
+            }
+            fs.copyFileSync(entryJSONPath, path.join(outputPath, `${safePartName}-entry.json`))
+            fs.copyFileSync(path.join(itemPath, 'danmaku.xml'), path.join(outputPath, `${safePartName}-danmaku.xml`))
+            if(!imageTasks[outputPath]) {
+                imageTasks[outputPath] = {cover: entry.cover, outputPath}
+            }
+        })
     })
 })
 
